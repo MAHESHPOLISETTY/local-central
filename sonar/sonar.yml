@@ -1,0 +1,47 @@
+---
+- name: setup sonar
+  hosts: Sonar
+  become: true
+
+  tasks:
+    - name: Update package cache
+      package:
+        name: "*"
+        state: latest
+      become: yes
+
+    - name: Install Java
+      yum:
+        name: java-11*
+      become: yes
+
+    - name: Install unzip package
+      package:
+        name: unzip
+        state: present
+      become: yes
+
+    - name: Download and install SonarQube
+      get_url:
+        url: "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-7.6.zip"
+        dest: "/opt/"
+      become: yes
+
+    - name: Ensure unzip package is installed
+      yum:
+        name: unzip  # Use "name: unzip" for Ubuntu, "name: unzip" for Red Hat, or adjust based on your package manager
+
+    - name: Unzip the file
+      command: unzip /opt/sonarqube-7.6.zip -d /opt/ 
+
+    - name: Set permissions on SonarQube directory
+      ansible.builtin.file:
+        path: /opt/sonarqube-7.6
+        state: directory
+        mode: "0755"
+        recurse: yes
+
+    - name: Start SonarQube service
+      command: "sh /opt/sonarqube-7.6/bin/linux-x86-64/sonar.sh start"
+      become: yes
+

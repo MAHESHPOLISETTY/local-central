@@ -1,0 +1,15 @@
+---
+- name: Run Shell Commands
+  hosts: Sonar
+  gather_facts: false  # Disable gathering facts to speed up execution
+
+  tasks:
+    - name: Execute a shell command on the remote server
+      shell: |
+        echo "Hello from Ansible master! This command runs on the remote server."
+      register: command_output
+
+    - name: Display the command output
+      debug:
+        var: command_output.stdout_lines
+
