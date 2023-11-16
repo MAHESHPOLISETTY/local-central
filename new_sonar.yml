@@ -1,0 +1,50 @@
+---
+- name: Install and Configure SonarQube
+  hosts: Sonar
+  become: true
+
+  tasks:
+    - name: Install Java on Amazon Linux
+      yum:
+        name: java*
+        state: present
+
+    - name: Create sonarqube user
+      user:
+        name: sonarqube
+        comment: SonarQube system user
+        system: true
+        shell: /bin/bash
+
+    - name: Define SonarQube version
+      set_fact:
+        sonarqube_version: "9.9.3.79811"
+
+    - name: Download and extract SonarQube
+      get_url:
+        url: "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-{{ sonarqube_version }}.zip"
+        dest: /opt
+        mode: '0755'
+        
+    - name: Create SonarQube directory
+      file:
+        path: "/opt/sonarqube-{{ sonarqube_version }}"
+        state: directory
+        mode: '0755'
+
+    - name: Extract SonarQube
+      command: "unzip -q /opt/sonarqube-{{ sonarqube_version }}.zip -d /opt"
+      args:
+        creates: "/opt/sonarqube-{{ sonarqube_version }}/bin/sonar.sh"
+
+    - name: Start SonarQube
+      shell: "/opt/sonarqube-{{ sonarqube_version }}/bin/linux-x86-64/sonar.sh console"
+      async: 600
+      poll: 0
+
+    - name: Wait for SonarQube to start
+      wait_for:
+        port: 9000
+        delay: 60
+      become: false
+
